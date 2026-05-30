@@ -50,3 +50,19 @@ Built on the [agent-native framework](https://github.com/alpibrusl/agent-native)
 - **P4** — determinism: pure validation is replayable from inputs alone
 - **P10** — provenance: logic provenance (lex-vcs) + execution provenance (lex-trail)
 - **P12** — typed semantic change: algo changes recorded as operations, not text diffs
+
+## Governance & compliance
+
+How lex's provenance and attestation tooling supports regulatory record-keeping for trading-validation logic. Commands are verified against lex 0.9.7; the regulatory mappings are interpretive — verify against primary sources before relying on them.
+
+- [docs/governance-workflow.md](docs/governance-workflow.md) — typed change records with lex-vcs, mapped to **MiFID II Article 17**.
+- [docs/sr11-7-governance.md](docs/sr11-7-governance.md) — model-risk governance mapped to **SR 11-7**.
+
+Both are reproducible from [`examples/governance/`](examples/governance/).
+
+## Regulatory reporting (core subsets — not yet spec-verified)
+
+Typed report builders + JSON serialization. These cover the **core field subsets** of their respective specs; the full field lists have **not** been verified against the primary sources, so they are scaffolding, not compliant reports.
+
+- [`src/reporting/mifid_rts22.lex`](src/reporting/mifid_rts22.lex) — **MiFID II RTS 22** transaction report from a FIX `ExecutionReport` + reference data; `from_execution` returns a typed report or the list of missing required fields. Example: [`examples/transaction_report.lex`](examples/transaction_report.lex).
+- [`src/reporting/finra_cat.lex`](src/reporting/finra_cat.lex) — **FINRA CAT** lifecycle events (`NewOrder`/`RouteOrder`/`Fill`/`Cancel`) with nanosecond-precision `Int` timestamps preserved as JSON numbers. Example: [`examples/cat_reporting.lex`](examples/cat_reporting.lex).
