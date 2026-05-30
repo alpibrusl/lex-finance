@@ -50,3 +50,12 @@ Built on the [agent-native framework](https://github.com/alpibrusl/agent-native)
 - **P4** — determinism: pure validation is replayable from inputs alone
 - **P10** — provenance: logic provenance (lex-vcs) + execution provenance (lex-trail)
 - **P12** — typed semantic change: algo changes recorded as operations, not text diffs
+
+## Governance & compliance
+
+How lex's provenance and attestation tooling supports regulatory record-keeping for trading-validation logic. Commands are verified against lex 0.9.7; the regulatory mappings are interpretive — verify against primary sources before relying on them.
+
+- [docs/governance-workflow.md](docs/governance-workflow.md) — typed change records with lex-vcs, mapped to **MiFID II Article 17**.
+- [docs/sr11-7-governance.md](docs/sr11-7-governance.md) — model-risk governance mapped to **SR 11-7**.
+
+Both are reproducible from [`examples/governance/`](examples/governance/).
