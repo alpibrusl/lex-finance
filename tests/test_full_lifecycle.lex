@@ -84,10 +84,10 @@ fn apply_fill_step(pos_db :: orm_conn.ConnDb, o :: order.Order, mock_er :: er.Ex
   let fills := ffe.fill_from_er(mock_er)
   let pos_key := { account: o.account, symbol: o.symbol }
   match list.head(fills) {
-    None => fail("mock exec report produced no fills — check exec_type and last_qty")
+    None => fail("mock exec report produced no fills — check exec_type and last_qty"),
     Some(fill) => match ps.apply_and_store(pos_db, pos_key, fill) {
-      Err(_) => fail("position update failed")
-      Ok(updated) => assert_true(updated.qty == 100, str.concat("expected qty=100 after buy fill, got=", int.to_str(updated.qty)))
+      Err(_) => fail("position update failed"),
+      Ok(updated) => assert_true(updated.qty == 100, str.concat("expected qty=100 after buy fill, got=", int.to_str(updated.qty))),
     }
   }
 }

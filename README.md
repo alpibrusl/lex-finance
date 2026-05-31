@@ -26,6 +26,23 @@ lex-trade / validation.validate
         └── log to lex-trail + surface to agent
 ```
 
+## Live demo — end-to-end
+
+Three guarantees in a single `lex run`: typed rejection, trail provenance, regulatory reporting.
+
+```sh
+bash examples/demo.sh
+```
+
+```
+ORD-BAD  5000 MSFT buy limit  → REJECTED  quantity 5000 exceeds limit of 1000
+ORD-001  100 MSFT buy limit   → ACCEPTED
+  entry_id  6f0abcc7767412af984485b356f3adcac187ae81a7e988e681c9e6bf54b610c1
+
+MiFID II RTS 22:  {"transaction_ref_no":"TXN-0001","trading_venue":"XNAS",...}
+FINRA CAT:  MENO → MEOR → MEOT  (nanosecond timestamps as JSON numbers)
+```
+
 ## Packages
 
 | Package | Status | Role |
@@ -33,10 +50,10 @@ lex-trade / validation.validate
 | [lex-money](https://github.com/alpibrusl/lex-money) | ✓ live | Exact decimal arithmetic, ISO 4217 currencies |
 | [lex-fix](https://github.com/alpibrusl/lex-fix) | ✓ live | FIX 4.4 typed protocol adapter, conformance |
 | [lex-trade](https://github.com/alpibrusl/lex-trade) | ✓ live | Pre-trade validation, risk limits, order lifecycle |
-| lex-positions | planned | Stateful position book as `[positions]` effect |
+| [lex-positions](https://github.com/alpibrusl/lex-positions) | ✓ live | WAAC position book, realized PnL |
+| [lex-risk](https://github.com/alpibrusl/lex-risk) | ✓ live | Portfolio Greeks, notional, Reg-T margin |
+| [lex-trail](https://github.com/alpibrusl/lex-trail) | ✓ live | Typed execution provenance, deterministic replay |
 | lex-marketdata | planned | Market data effect, reference prices |
-| [lex-trail](https://github.com/alpibrusl/lex-trail) | exists | Typed execution provenance (integration pending) |
-| [lex-lang / std.decimal](https://github.com/alpibrusl/lex-lang) | PR open | Exact decimal in Core (issue #574) |
 
 ## Roadmap
 
