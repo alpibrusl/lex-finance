@@ -9,3 +9,4 @@ lex-trade     = { path = "../lex-trade" }
 lex-trail     = { path = "../lex-trail" }
 lex-positions = { path = "../lex-positions" }
 lex-orm       = { path = "../lex-orm" }
+lex-risk      = { path = "../lex-risk" }

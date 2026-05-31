@@ -74,9 +74,11 @@ echo
 pause 1.2
 
 # ── Run the demo ─────────────────────────────────────────────────────────
-hdr "End to end — rejection, trail, MiFID II, FINRA CAT"
-slow "  Two orders. One blocked. One accepted and logged."
-slow "  The fill generates a MiFID II RTS 22 report and three FINRA CAT events."
+hdr "End to end — margin gate, pre-trade validation, trail, MiFID II, FINRA CAT"
+slow "  Three orders. Two blocked by different gates. One accepted and logged."
+slow "  ORD-MARGIN: margin breach — $75k initial margin exceeds the $50k cap."
+slow "  ORD-BAD: passes margin, blocked by qty limit — 5000 exceeds max 1000."
+slow "  ORD-001: passes both — entry_id written, RTS 22 report + CAT events generated."
 echo
 pause 0.8
 
@@ -93,8 +95,9 @@ hr
 echo
 echo "  ${BOLD}${GREEN}DONE${RESET}"
 echo
-echo "  Pre-trade gate: typed rejection — quantity 5000 exceeds limit of 1000."
-echo "  Trail provenance: entry_id is a SHA-256 content address, not a row ID."
+echo "  Margin gate: ORD-MARGIN blocked — \$75k IM exceeds \$50k cap (lex-risk)."
+echo "  Pre-trade gate: ORD-BAD blocked — qty 5000 exceeds limit 1000 (lex-trade)."
+echo "  Trail provenance: ORD-001 entry_id is a SHA-256 content address, not a row ID."
 echo "  MiFID II RTS 22: typed report from FIX ExecutionReport + reference data."
 echo "  FINRA CAT: MENO → MEOR → MEOT with nanosecond-precision timestamps."
 echo
