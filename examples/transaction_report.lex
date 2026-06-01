@@ -22,7 +22,7 @@ fn sample_instrument() -> rts22.Instrument {
 }
 
 fn sample_context() -> rts22.ReportingContext {
-  { transaction_ref_no: "TXN-0001", buyer_lei: "5493001KJTIIGC8Y1R12", seller_lei: "549300ABCDEF12345678", trade_date: "2026-05-30", trade_time: "2026-05-30T14:00:00.123456Z" }
+  rts22.reporting_ctx("TXN-0001", "5493001KJTIIGC8Y1R12", "549300ABCDEF12345678", "2026-05-30", "2026-05-30T14:00:00.123456Z")
 }
 
 # Successful conversion → JSON string.
@@ -35,7 +35,7 @@ fn demo() -> Str {
 
 # Missing reference data → the typed list of missing required fields.
 fn demo_missing() -> Str {
-  let ctx := { transaction_ref_no: "TXN-0002", buyer_lei: "", seller_lei: "", trade_date: "2026-05-30", trade_time: "2026-05-30T14:00:00.123456Z" }
+  let ctx := rts22.reporting_ctx("TXN-0002", "", "", "2026-05-30", "2026-05-30T14:00:00.123456Z")
   match rts22.from_execution(sample_execution(), sample_instrument(), ctx) {
     Ok(report) => rts22.to_json_report(report),
     Err(missing) => str.concat("missing fields: ", str.join(missing, ", ")),

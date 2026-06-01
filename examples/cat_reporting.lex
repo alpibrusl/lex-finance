@@ -8,7 +8,7 @@
 import "../src/reporting/finra_cat" as cat
 
 fn ctx() -> cat.OrderContext {
-  { cat_order_id: "CAT-0001", firm_id: "FIRM01", symbol: "MSFT", side: "B", order_type: "LMT" }
+  { cat_order_id: "CAT-0001", firm_id: "FIRM01", reporter_imid: "IMID01", symbol: "MSFT", side: "B", order_type: "LMT" }
 }
 
 # New-order event JSON (timestamp is a nanosecond JSON number).
