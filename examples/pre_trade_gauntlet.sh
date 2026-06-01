@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Theatrical demo — lex-finance: Five orders. Four walls. One paper trail.
-# Usage:   bash examples/killer_demo.sh
-#          asciinema rec examples/killer_demo.cast -c "bash examples/killer_demo.sh" --overwrite
+# Usage:   bash examples/pre_trade_gauntlet.sh
+#          asciinema rec examples/pre_trade_gauntlet.cast -c "bash examples/pre_trade_gauntlet.sh" --overwrite
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -77,9 +77,9 @@ pause 1.2
 
 # ── Type check ───────────────────────────────────────────────────────────
 hdr "Type check — all effects declared before a byte runs"
-cmd "lex check examples/killer_demo.lex"
+cmd "lex check examples/pre_trade_gauntlet.lex"
 pause 0.4
-"$LEX" check examples/killer_demo.lex
+"$LEX" check examples/pre_trade_gauntlet.lex
 echo "${GREEN}${BOLD}✓  ok${RESET}"
 echo
 pause 1.2
@@ -95,10 +95,10 @@ echo
 pause 0.8
 
 cmd "lex run --allow-effects fs_write,io,sql,time \\"
-echo "        examples/killer_demo.lex main"
+echo "        examples/pre_trade_gauntlet.lex main"
 pause 0.5
 "$LEX" run --allow-effects fs_write,io,sql,time \
-  examples/killer_demo.lex main 2>&1 | fmt
+  examples/pre_trade_gauntlet.lex main 2>&1 | fmt
 echo
 pause 1.5
 
