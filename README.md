@@ -26,22 +26,25 @@ lex-trade / validation.validate
         └── log to lex-trail + surface to agent
 ```
 
-## Live demo — end-to-end
+## Live demo — pre-trade gauntlet
 
-Three guarantees in a single `lex run`: typed rejection, trail provenance, regulatory reporting.
+Five orders. Four typed enforcement walls. One paper trail.
+
+[![asciicast](https://asciinema.org/a/HVTVgllKPlkhuSzC.svg)](https://asciinema.org/a/HVTVgllKPlkhuSzC)
 
 ```sh
-bash examples/demo.sh
+bash examples/pre_trade_gauntlet.sh
 ```
 
-```
-ORD-BAD  5000 MSFT buy limit  → REJECTED  quantity 5000 exceeds limit of 1000
-ORD-001  100 MSFT buy limit   → ACCEPTED
-  entry_id  6f0abcc7767412af984485b356f3adcac187ae81a7e988e681c9e6bf54b610c1
+Five orders run through every layer of the stack in sequence:
 
-MiFID II RTS 22:  {"transaction_ref_no":"TXN-0001","trading_venue":"XNAS",...}
-FINRA CAT:  MENO → MEOR → MEOT  (nanosecond timestamps as JSON numbers)
-```
+| Order | Wall | Blocked by |
+|---|---|---|
+| ORD-NVDA 600@$500 | Margin gate | Reg-T IM $75k exceeds $50k cap |
+| ORD-BAD 5000@$1 | Risk limit | qty 5000 exceeds max 1000 |
+| ORD-STOP Stop→NYSE | FIX conformance | NYSE profile: `no_stop_orders` |
+| ORD-DARK DirectTo(CBOE) | SOR | CBOE not in available venue list |
+| ORD-001 100@$125.50 | **Accepted** | SHA-256 trail · NYSE+NASDAQ sweep · MiFID II XML · FINRA CAT |
 
 ## Packages
 
@@ -53,6 +56,7 @@ FINRA CAT:  MENO → MEOR → MEOT  (nanosecond timestamps as JSON numbers)
 | [lex-positions](https://github.com/alpibrusl/lex-positions) | ✓ live | WAAC position book, realized PnL |
 | [lex-risk](https://github.com/alpibrusl/lex-risk) | ✓ live | Portfolio Greeks, notional, Reg-T margin |
 | [lex-trail](https://github.com/alpibrusl/lex-trail) | ✓ live | Typed execution provenance, deterministic replay |
+| [lex-sor](https://github.com/alpibrusl/lex-sor) | ✓ live | Smart order routing — BestPrice, MinCost, Sweep, DirectTo |
 | lex-marketdata | planned | Market data effect, reference prices |
 
 ## Roadmap
