@@ -108,7 +108,7 @@ fn test_transaction_type_new() -> Result[Unit, Str] {
 }
 
 fn test_transaction_type_cancel() -> Result[Unit, Str] {
-  assert_true(rts22.transaction_type_code(Cancel(())) == "CANC", "Cancel maps to CANC")
+  assert_true(rts22.transaction_type_code(CancelTxn(())) == "CANC", "CancelTxn maps to CANC")
 }
 
 fn test_transaction_type_correction() -> Result[Unit, Str] {

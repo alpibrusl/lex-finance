@@ -66,12 +66,12 @@ fn trading_capacity_code(c :: TradingCapacity) -> Str {
 }
 
 # RTS 22 — Transaction type (new, cancel, correction).
-type TransactionType = NewTransaction(Unit) | Cancel(Unit) | Correction(Unit)
+type TransactionType = NewTransaction(Unit) | CancelTxn(Unit) | Correction(Unit)
 
 fn transaction_type_code(t :: TransactionType) -> Str {
   match t {
     NewTransaction(_) => "NEWT",
-    Cancel(_) => "CANC",
+    CancelTxn(_) => "CANC",
     Correction(_) => "CORR",
   }
 }
