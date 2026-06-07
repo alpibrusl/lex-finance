@@ -15,7 +15,7 @@ Agent emits Order
 lex-trade / validation.validate
   ├── RiskLimit gates (qty, notional, symbol, side)       — pure, lex-trade
   ├── Position limits (net exposure, wash trade)          — [positions], lex-positions
-  ├── Price tolerance (vs. reference price)               — [market_data], lex-marketdata
+  ├── Price tolerance (vs. reference price)               — pure, lex-marketdata/mock
   ├── FIX conformance (lex-fix/conformance)               — pure, lex-fix
   │
   ├── Accepted(NewOrderSingle)
@@ -57,7 +57,7 @@ Five orders run through every layer of the stack in sequence:
 | [lex-risk](https://github.com/alpibrusl/lex-risk) | ✓ live | Portfolio Greeks, notional, Reg-T margin |
 | [lex-trail](https://github.com/alpibrusl/lex-trail) | ✓ live | Typed execution provenance, deterministic replay |
 | [lex-sor](https://github.com/alpibrusl/lex-sor) | ✓ live | Smart order routing — BestPrice, MinCost, Sweep, DirectTo |
-| lex-marketdata | planned | Market data effect, reference prices |
+| [lex-marketdata](https://github.com/alpibrusl/lex-marketdata) | ✓ live | Quote types, reference data, mock feed for simulation |
 
 ## Roadmap
 
