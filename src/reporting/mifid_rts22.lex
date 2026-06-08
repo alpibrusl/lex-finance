@@ -99,30 +99,69 @@ fn otc_flag_code(f :: OtcFlag) -> Str {
   }
 }
 
+# RTS 22 Field 5 — Financial instrument classification (CFI code).
+type AssetClass = EquityCash(Unit) | EquityDerivative(Unit) | InterestRate(Unit) | ForeignExchange(Unit) | Commodity(Unit) | OtherAsset(Unit)
+
+fn asset_class_code(a :: AssetClass) -> Str {
+  match a {
+    EquityCash(_)       => "ESXXXX",
+    EquityDerivative(_) => "OCXXXX",
+    InterestRate(_)     => "IRXXXX",
+    ForeignExchange(_)  => "CMXXXX",
+    Commodity(_)        => "CMXXXX",
+    OtherAsset(_)       => "XXXXXX",
+  }
+}
+
+# RTS 22 Field 33 — Counterparty sector (classification of legal entity).
+type CounterpartySector = InvestmentFirm(Unit) | CreditInstitution(Unit) | InsuranceFirm(Unit) | UCITS(Unit) | NonFinancial(Unit)
+
+fn counterparty_sector_code(c :: CounterpartySector) -> Str {
+  match c {
+    InvestmentFirm(_)   => "IFRS",
+    CreditInstitution(_) => "CRDT",
+    InsuranceFirm(_)    => "INSU",
+    UCITS(_)            => "UCIT",
+    NonFinancial(_)     => "NFIN",
+  }
+}
+
+# RTS 22 Field 38 — Order type mapping to FIX execution types for RTS 22.
+type OrderKind = MarketRts(Unit) | LimitRts(Unit) | StopRts(Unit) | StopLimitRts(Unit)
+
+fn order_kind_code(k :: OrderKind) -> Str {
+  match k {
+    MarketRts(_)    => "MKTORD",
+    LimitRts(_)     => "LMTORD",
+    StopRts(_)      => "STPORD",
+    StopLimitRts(_) => "STPLMT",
+  }
+}
+
 # ---- Context and report types -------------------------------------------
 
 # Data required by RTS 22 that an ExecutionReport does not carry.
 # Fields trading_capacity, transaction_type, algo_id, waiver_types, and
 # otc_flags were added in the expanded subset; use reporting_ctx for a
 # constructor with defaults, or reporting_ctx_full for full control.
-type ReportingContext = { transaction_ref_no :: Str, buyer_lei :: Str, seller_lei :: Str, trade_date :: Str, trade_time :: Str, trading_capacity :: TradingCapacity, transaction_type :: TransactionType, algo_id :: Option[Str], waiver_types :: List[WaiverType], otc_flags :: List[OtcFlag] }
+type ReportingContext = { transaction_ref_no :: Str, buyer_lei :: Str, seller_lei :: Str, trade_date :: Str, trade_time :: Str, trading_capacity :: TradingCapacity, transaction_type :: TransactionType, algo_id :: Option[Str], waiver_types :: List[WaiverType], otc_flags :: List[OtcFlag], asset_class :: AssetClass, price_currency :: Str, notional_currency :: Str, counterparty_sector :: CounterpartySector, order_kind :: Option[OrderKind], decision_maker_lei :: Option[Str], short_selling_flag :: Bool }
 
 # Convenience constructor — defaults trading_capacity to Principal, transaction_type
 # to NewTransaction, algo_id to None, and empty waiver/OTC lists.
 fn reporting_ctx(txn_ref :: Str, buyer_lei :: Str, seller_lei :: Str, trade_date :: Str, trade_time :: Str) -> ReportingContext {
-  { transaction_ref_no: txn_ref, buyer_lei: buyer_lei, seller_lei: seller_lei, trade_date: trade_date, trade_time: trade_time, trading_capacity: Principal(()), transaction_type: NewTransaction(()), algo_id: None, waiver_types: [], otc_flags: [] }
+  { transaction_ref_no: txn_ref, buyer_lei: buyer_lei, seller_lei: seller_lei, trade_date: trade_date, trade_time: trade_time, trading_capacity: Principal(()), transaction_type: NewTransaction(()), algo_id: None, waiver_types: [], otc_flags: [], asset_class: EquityCash(()), price_currency: "USD", notional_currency: "USD", counterparty_sector: InvestmentFirm(()), order_kind: None, decision_maker_lei: None, short_selling_flag: false }
 }
 
 # Full constructor — explicit control over all RTS 22 context fields.
-fn reporting_ctx_full(txn_ref :: Str, buyer_lei :: Str, seller_lei :: Str, trade_date :: Str, trade_time :: Str, trading_capacity :: TradingCapacity, transaction_type :: TransactionType, algo_id :: Option[Str], waiver_types :: List[WaiverType], otc_flags :: List[OtcFlag]) -> ReportingContext {
-  { transaction_ref_no: txn_ref, buyer_lei: buyer_lei, seller_lei: seller_lei, trade_date: trade_date, trade_time: trade_time, trading_capacity: trading_capacity, transaction_type: transaction_type, algo_id: algo_id, waiver_types: waiver_types, otc_flags: otc_flags }
+fn reporting_ctx_full(txn_ref :: Str, buyer_lei :: Str, seller_lei :: Str, trade_date :: Str, trade_time :: Str, trading_capacity :: TradingCapacity, transaction_type :: TransactionType, algo_id :: Option[Str], waiver_types :: List[WaiverType], otc_flags :: List[OtcFlag], asset_class :: AssetClass, price_currency :: Str, notional_currency :: Str, counterparty_sector :: CounterpartySector, order_kind :: Option[OrderKind], decision_maker_lei :: Option[Str], short_selling_flag :: Bool) -> ReportingContext {
+  { transaction_ref_no: txn_ref, buyer_lei: buyer_lei, seller_lei: seller_lei, trade_date: trade_date, trade_time: trade_time, trading_capacity: trading_capacity, transaction_type: transaction_type, algo_id: algo_id, waiver_types: waiver_types, otc_flags: otc_flags, asset_class: asset_class, price_currency: price_currency, notional_currency: notional_currency, counterparty_sector: counterparty_sector, order_kind: order_kind, decision_maker_lei: decision_maker_lei, short_selling_flag: short_selling_flag }
 }
 
 # Core transaction report (legacy — kept for backward compatibility).
 type TransactionReport = { transaction_ref_no :: Str, trading_venue :: Str, instrument_isin :: Str, buyer_lei :: Str, seller_lei :: Str, price :: Str, quantity :: Str, trade_date :: Str, trade_time :: Str, side :: Str }
 
 # Expanded RTS 22 report including the new field subset.
-type Rts22Report = { transaction_ref_no :: Str, trading_venue :: Str, instrument_isin :: Str, buyer_lei :: Str, seller_lei :: Str, price :: Str, quantity :: Str, trade_date :: Str, trade_time :: Str, side :: Str, trading_capacity :: Str, transaction_type :: Str, algo_id :: Option[Str], waiver_types :: List[Str], otc_flags :: List[Str] }
+type Rts22Report = { transaction_ref_no :: Str, trading_venue :: Str, instrument_isin :: Str, buyer_lei :: Str, seller_lei :: Str, price :: Str, quantity :: Str, trade_date :: Str, trade_time :: Str, side :: Str, trading_capacity :: Str, transaction_type :: Str, algo_id :: Option[Str], waiver_types :: List[Str], otc_flags :: List[Str], asset_class :: Str, price_currency :: Str, notional_currency :: Str, counterparty_sector :: Str, order_kind :: Option[Str], decision_maker_lei :: Option[Str], short_selling_flag :: Bool }
 
 fn side_code(s :: en.Side) -> Str {
   match s {
@@ -163,7 +202,9 @@ fn missing_rts22_fields(r :: Rts22Report) -> List[Str] {
   let m6 := check_present(r.quantity, "quantity", m5)
   let m7 := check_present(r.trade_date, "trade_date", m6)
   let m8 := check_present(r.trade_time, "trade_time", m7)
-  m8
+  let m9 := check_present(r.price_currency, "price_currency", m8)
+  let m10 := check_present(r.notional_currency, "notional_currency", m9)
+  m10
 }
 
 # Build a transaction report from an execution, its instrument reference
@@ -183,7 +224,8 @@ fn from_execution(report :: er.ExecutionReport, instrument :: Instrument, ctx ::
 fn from_execution_full(report :: er.ExecutionReport, instrument :: Instrument, ctx :: ReportingContext) -> Result[Rts22Report, List[Str]] {
   let waiver_codes := list.map(ctx.waiver_types, waiver_code)
   let otc_codes := list.map(ctx.otc_flags, otc_flag_code)
-  let tr := { transaction_ref_no: ctx.transaction_ref_no, trading_venue: instrument.mic, instrument_isin: instrument.isin, buyer_lei: ctx.buyer_lei, seller_lei: ctx.seller_lei, price: report.last_px, quantity: report.last_qty, trade_date: ctx.trade_date, trade_time: ctx.trade_time, side: side_code(report.side), trading_capacity: trading_capacity_code(ctx.trading_capacity), transaction_type: transaction_type_code(ctx.transaction_type), algo_id: ctx.algo_id, waiver_types: waiver_codes, otc_flags: otc_codes }
+  let ok_str := match ctx.order_kind { None => None, Some(k) => Some(order_kind_code(k)) }
+  let tr := { transaction_ref_no: ctx.transaction_ref_no, trading_venue: instrument.mic, instrument_isin: instrument.isin, buyer_lei: ctx.buyer_lei, seller_lei: ctx.seller_lei, price: report.last_px, quantity: report.last_qty, trade_date: ctx.trade_date, trade_time: ctx.trade_time, side: side_code(report.side), trading_capacity: trading_capacity_code(ctx.trading_capacity), transaction_type: transaction_type_code(ctx.transaction_type), algo_id: ctx.algo_id, waiver_types: waiver_codes, otc_flags: otc_codes, asset_class: asset_class_code(ctx.asset_class), price_currency: ctx.price_currency, notional_currency: ctx.notional_currency, counterparty_sector: counterparty_sector_code(ctx.counterparty_sector), order_kind: ok_str, decision_maker_lei: ctx.decision_maker_lei, short_selling_flag: ctx.short_selling_flag }
   let missing := missing_rts22_fields(tr)
   if list.is_empty(missing) {
     Ok(tr)
@@ -210,7 +252,10 @@ fn to_json_rts22(r :: Rts22Report) -> Str {
     None => json_field("algo_id", ""),
     Some(id) => json_field("algo_id", id),
   }
-  let fields := [json_field("transaction_ref_no", r.transaction_ref_no), json_field("trading_venue", r.trading_venue), json_field("instrument_isin", r.instrument_isin), json_field("buyer_lei", r.buyer_lei), json_field("seller_lei", r.seller_lei), json_field("price", r.price), json_field("quantity", r.quantity), json_field("trade_date", r.trade_date), json_field("trade_time", r.trade_time), json_field("side", r.side), json_field("trading_capacity", r.trading_capacity), json_field("transaction_type", r.transaction_type), algo]
+  let ok_field := match r.order_kind { None => json_field("order_kind", ""), Some(k) => json_field("order_kind", k) }
+  let dm_field := match r.decision_maker_lei { None => json_field("decision_maker_lei", ""), Some(lei) => json_field("decision_maker_lei", lei) }
+  let ss_str := if r.short_selling_flag { "true" } else { "false" }
+  let fields := [json_field("transaction_ref_no", r.transaction_ref_no), json_field("trading_venue", r.trading_venue), json_field("instrument_isin", r.instrument_isin), json_field("buyer_lei", r.buyer_lei), json_field("seller_lei", r.seller_lei), json_field("price", r.price), json_field("quantity", r.quantity), json_field("trade_date", r.trade_date), json_field("trade_time", r.trade_time), json_field("side", r.side), json_field("trading_capacity", r.trading_capacity), json_field("transaction_type", r.transaction_type), algo, json_field("asset_class", r.asset_class), json_field("price_currency", r.price_currency), json_field("notional_currency", r.notional_currency), json_field("counterparty_sector", r.counterparty_sector), ok_field, dm_field, json_field("short_selling_flag", ss_str)]
   str.concat("{", str.concat(str.join(fields, ","), "}"))
 }
 
