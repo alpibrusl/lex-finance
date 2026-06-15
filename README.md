@@ -1,5 +1,9 @@
 # lex-finance
 
+[![CI](https://github.com/alpibrusl/lex-finance/actions/workflows/ci.yml/badge.svg)](https://github.com/alpibrusl/lex-finance/actions/workflows/ci.yml)
+
+**Part of the [Lex](https://lexlang.org) project** — Finance · [Manifesto](https://lexlang.org/manifesto) · [All packages](https://lexlang.org)
+
 The complete pre-trade enforcement pipeline for Lex, plus regulatory reporting scaffolding.
 
 Assembles every layer of the stack — margin, position limits, price tolerance, FIX conformance, smart order routing — into a single typed entry point. An agent's order either clears all layers and gets a `NewOrderSingle` ready for the exchange, or receives a typed list of every reason it was rejected.
