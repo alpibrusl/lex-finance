@@ -43,7 +43,7 @@ fn full_context() -> rts22.ReportingContext {
 fn full_rts22_report() -> rts22.Rts22Report {
   match rts22.from_execution_full(buy_execution(), instrument(), full_context()) {
     Ok(r) => r,
-    Err(_) => { transaction_ref_no: "ERR", trading_venue: "ERR", instrument_isin: "ERR", buyer_lei: "ERR", seller_lei: "ERR", price: "ERR", quantity: "ERR", trade_date: "ERR", trade_time: "ERR", side: "ERR", trading_capacity: "ERR", transaction_type: "ERR", algo_id: None, waiver_types: [], otc_flags: [] },
+    Err(_) => { transaction_ref_no: "ERR", trading_venue: "ERR", instrument_isin: "ERR", buyer_lei: "ERR", seller_lei: "ERR", price: "ERR", quantity: "ERR", trade_date: "ERR", trade_time: "ERR", side: "ERR", trading_capacity: "ERR", transaction_type: "ERR", algo_id: None, waiver_types: [], otc_flags: [], asset_class: "ERR", counterparty_sector: "ERR", decision_maker_lei: None, notional_currency: "ERR", order_kind: None, price_currency: "ERR", short_selling_flag: false },
   }
 }
 
@@ -135,7 +135,7 @@ fn test_otc_flag_illiquid() -> Result[Unit, Str] {
 
 # ---- reporting_ctx_full -----------------------------------------
 fn test_reporting_ctx_full_fields() -> Result[Unit, Str] {
-  let ctx := rts22.reporting_ctx_full("TXN-X", "LEI-A", "LEI-B", "2026-05-30", "14:00:00.000Z", RisklessPrincipal(()), Correction(()), Some("ALGO-42"), [LiquidityWaiver(())], [Benchmark(())])
+  let ctx := rts22.reporting_ctx_full("TXN-X", "LEI-A", "LEI-B", "2026-05-30", "14:00:00.000Z", RisklessPrincipal(()), Correction(()), Some("ALGO-42"), [LiquidityWaiver(())], [Benchmark(())], EquityCash(()), "EUR", "EUR", InvestmentFirm(()), Some(LimitRts(())), None, false)
   assert_true(ctx.transaction_ref_no == "TXN-X" and ctx.buyer_lei == "LEI-A" and ctx.algo_id == Some("ALGO-42"), "reporting_ctx_full round-trip")
 }
 
@@ -182,3 +182,4 @@ fn run_all() -> Int {
     }
   })
 }
+

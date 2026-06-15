@@ -15,10 +15,15 @@
 import "lex-money/src/decimal" as d
 
 import "lex-trade/src/order" as order
+
 import "lex-trade/src/limit" as limit
+
 import "lex-trade/src/validation" as v
+
 import "lex-trade/src/validation_io" as vio
+
 import "lex-trade/src/rejection" as rejection
+
 import "lex-trade/src/price_check" as pc
 
 import "lex-risk/src/margin" as margin
@@ -26,11 +31,7 @@ import "lex-risk/src/margin" as margin
 import "lex-trail/src/log" as trail_log
 
 # ---- Types ----------------------------------------------------------
-
-type MarginGate = {
-  mark_price :: Option[d.Decimal],  # None = skip margin check
-  config     :: margin.MarginConfig,
-}
+type MarginGate = { mark_price :: Option[d.Decimal], config :: margin.MarginConfig }
 
 fn default_margin_gate() -> MarginGate {
   { mark_price: None, config: margin.default_margin_config() }
@@ -45,24 +46,13 @@ fn margin_gate_with_config(mark_price :: d.Decimal, cfg :: margin.MarginConfig) 
 }
 
 # ---- Gate -----------------------------------------------------------
-
 fn margin_rejected(reason :: Str) -> vio.LogAndRecord {
   { result: Rejected([MarginLimitBreached(reason)]), entry_id: "" }
 }
 
 # Run margin check (if mark_price is Some), then delegate to the full
 # lex-trade validation + trail logging pipeline.
-fn validate_with_margin(
-  o        :: order.Order,
-  lim      :: limit.RiskLimit,
-  gate     :: MarginGate,
-  ref_price :: Option[d.Decimal],
-  tolerance :: pc.PriceTolerance,
-  sender   :: Str,
-  target   :: Str,
-  log      :: trail_log.Log,
-  algo_sig_id :: Str,
-) -> [sql, time] vio.LogAndRecord {
+fn validate_with_margin(o :: order.Order, lim :: limit.RiskLimit, gate :: MarginGate, ref_price :: Option[d.Decimal], tolerance :: pc.PriceTolerance, sender :: Str, target :: Str, log :: trail_log.Log, algo_sig_id :: Str) -> [sql, time] vio.LogAndRecord {
   match gate.mark_price {
     None => vio.validate_log_and_record(o, lim, ref_price, tolerance, sender, target, log, algo_sig_id),
     Some(mark) => match margin.pre_trade_check(o.quantity, mark, gate.config) {
@@ -71,3 +61,4 @@ fn validate_with_margin(
     },
   }
 }
+

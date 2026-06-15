@@ -11,8 +11,11 @@
 #   lex run --allow-effects fs_write,io,sql,time examples/demo.lex main
 
 import "std.io" as io
+
 import "std.str" as str
+
 import "std.list" as list
+
 import "std.int" as int
 
 import "lex-money/src/decimal" as d
@@ -20,18 +23,22 @@ import "lex-money/src/decimal" as d
 import "lex-trail/src/log" as trail_log
 
 import "lex-trade/src/order" as order
+
 import "lex-trade/src/limit" as limit
+
 import "lex-trade/src/rejection" as rejection
+
 import "lex-trade/src/validation_io" as vio
 
 import "lex-fix/src/v44/execution_report" as er
 
 import "../src/pre_trade" as pt
+
 import "../src/reporting/mifid_rts22" as rts22
+
 import "../src/reporting/finra_cat" as cat
 
 # ---- Fixtures -------------------------------------------------------
-
 fn lim() -> limit.RiskLimit {
   { max_order_qty: 1000, max_notional_str: "1000000.00", allowed_symbols: [], allowed_sides: ["buy", "sell"] }
 }
@@ -76,7 +83,6 @@ fn cat_ctx() -> cat.OrderContext {
 }
 
 # ---- Helpers --------------------------------------------------------
-
 fn section(title :: Str) -> [io] Unit {
   let hr := "──────────────────────────────────────────────"
   let __1 := io.print("")
@@ -101,28 +107,20 @@ fn show_outcome(o :: order.Order, lar :: vio.LogAndRecord) -> [io] Unit {
 }
 
 # ---- Section 1: Combined gate (margin + pre-trade) ------------------
-
 fn show_combined_gate(trail :: trail_log.Log) -> [io, sql, time] Unit {
   let __s := section("1 — Combined gate: margin → pre-trade validation → trail")
-
-  # Margin breach: short-circuits before lex-trade validation runs
   let gate_nvda := pt.margin_gate(price(50000, -2))
   let lar1 := pt.validate_with_margin(margin_order(), lim(), gate_nvda, None, tolerance(), "ALGO01", "EXCH01", trail, "")
   let __1 := show_outcome(margin_order(), lar1)
-
-  # Passes margin ($12.50 IM) but fails lex-trade qty limit (5000 > 1000)
   let gate_msft := pt.margin_gate(price(100, -2))
   let lar2 := pt.validate_with_margin(qty_order(), lim(), gate_msft, None, tolerance(), "ALGO01", "EXCH01", trail, "")
   let __2 := show_outcome(qty_order(), lar2)
-
-  # Both checks pass: entry_id logged to trail
   let gate_good := pt.margin_gate(price(12550, -2))
   let lar3 := pt.validate_with_margin(good_order(), lim(), gate_good, None, tolerance(), "ALGO01", "EXCH01", trail, "validation.validate@0.9.7")
   show_outcome(good_order(), lar3)
 }
 
 # ---- Section 2: MiFID II RTS 22 report ------------------------------
-
 fn show_mifid_report() -> [io] Unit {
   let __s := section("2 — MiFID II RTS 22 transaction report")
   match rts22.from_execution(mock_fill(good_order()), instrument(), reporting_ctx("TXN-0001")) {
@@ -132,23 +130,20 @@ fn show_mifid_report() -> [io] Unit {
 }
 
 # ---- Section 3: FINRA CAT events ------------------------------------
-
 fn show_finra_cat() -> [io] Unit {
   let __s := section("3 — FINRA CAT events (core subset)")
   let ctx := cat_ctx()
-  let new_ev    := cat.from_lifecycle(ctx, OnSubmit({ qty: 100, timestamp_ns: 1780000000123456789 }))
-  let route_ev  := cat.from_lifecycle(ctx, OnRoute({ route_dest: "XNAS", qty: 100, timestamp_ns: 1780000000234567890 }))
-  let fill_ev   := cat.from_lifecycle(ctx, OnFill({ fill_qty: 100, fill_price: "125.50", timestamp_ns: 1780000000987654321 }))
+  let new_ev := cat.from_lifecycle(ctx, OnSubmit({ qty: 100, timestamp_ns: 1780000000123456789 }))
+  let route_ev := cat.from_lifecycle(ctx, OnRoute({ route_dest: "XNAS", qty: 100, timestamp_ns: 1780000000234567890 }))
+  let fill_ev := cat.from_lifecycle(ctx, OnFill({ fill_qty: 100, fill_price: "125.50", timestamp_ns: 1780000000987654321 }))
   let __1 := io.print(cat.to_json_report(new_ev))
   let __2 := io.print(cat.to_json_report(route_ev))
   io.print(cat.to_json_report(fill_ev))
 }
 
 # ---- main -----------------------------------------------------------
-
 fn main() -> [io, sql, fs_write, time] Unit {
   let __hdr := io.print("  lex-finance — typed finance infrastructure for AI agents")
-
   match trail_log.open_memory() {
     Err(e) => io.print("  trail init failed: " + e),
     Ok(trail) => {
@@ -156,7 +151,7 @@ fn main() -> [io, sql, fs_write, time] Unit {
       ()
     },
   }
-
   let __2 := show_mifid_report()
   show_finra_cat()
 }
+

@@ -13,8 +13,11 @@
 #   lex run --allow-effects fs_write,io,sql,time examples/killer_demo.lex main
 
 import "std.io" as io
+
 import "std.str" as str
+
 import "std.list" as list
+
 import "std.int" as int
 
 import "lex-money/src/decimal" as d
@@ -22,25 +25,34 @@ import "lex-money/src/decimal" as d
 import "lex-trail/src/log" as trail_log
 
 import "lex-trade/src/order" as order
+
 import "lex-trade/src/limit" as limit
+
 import "lex-trade/src/rejection" as rejection
+
 import "lex-trade/src/validation_io" as vio
 
 import "lex-fix/src/venue" as vn
+
 import "lex-fix/src/v44/new_order_single" as nos
+
 import "lex-fix/src/v44/execution_report" as er
+
 import "lex-fix/src/conformance" as conf
 
 import "lex-sor/src/router" as router
+
 import "lex-sor/src/strategy" as strategy
+
 import "lex-sor/src/route" as sor_route
 
 import "../src/pre_trade" as pt
+
 import "../src/reporting/mifid_rts22" as rts22
+
 import "../src/reporting/finra_cat" as cat
 
 # ---- Fixtures -------------------------------------------------------
-
 fn lim() -> limit.RiskLimit {
   { max_order_qty: 1000, max_notional_str: "1000000.00", allowed_symbols: [], allowed_sides: ["buy", "sell"] }
 }
@@ -79,7 +91,6 @@ fn mock_fill(o :: order.Order) -> er.ExecutionReport {
 }
 
 # ---- Helpers --------------------------------------------------------
-
 fn section(n :: Int, title :: Str) -> [io] Unit {
   let hr := "──────────────────────────────────────────────────────────────────"
   let __1 := io.print("")
@@ -105,7 +116,6 @@ fn cross() -> [io] Unit {
 }
 
 # ---- Wall 1: Margin gate -------------------------------------------
-
 fn show_wall_margin(trail :: trail_log.Log) -> [io, sql, time] Unit {
   let __s := section(1, "Margin gate — Reg-T initial margin")
   let gate := pt.margin_gate(price(50000, -2))
@@ -125,7 +135,6 @@ fn show_wall_margin(trail :: trail_log.Log) -> [io, sql, time] Unit {
 }
 
 # ---- Wall 2: Risk limit (qty ceiling) ------------------------------
-
 fn show_wall_risk(trail :: trail_log.Log) -> [io, sql, time] Unit {
   let __s := section(2, "Risk limit — qty ceiling (lex-trade)")
   let gate := pt.margin_gate(price(100, -2))
@@ -145,13 +154,9 @@ fn show_wall_risk(trail :: trail_log.Log) -> [io, sql, time] Unit {
 }
 
 # ---- Wall 3: FIX conformance + venue profile -----------------------
-
 fn show_wall_fix() -> [io] Unit {
   let __s := section(3, "FIX conformance — NYSE profile: no_stop_orders")
-  let fix_msg := nos.to_fix_message(
-    nos.new_order("ORD-STOP", "MSFT", Buy(()), 100, Stop(()), None, Day(()), "20260601-09:30:00.000", "ALGO01", "EXCH01", None),
-    1
-  )
+  let fix_msg := nos.to_fix_message(nos.new_order("ORD-STOP", "MSFT", Buy(()), 100, Stop(()), None, Day(()), "20260601-09:30:00.000", "ALGO01", "EXCH01", None), 1)
   let nyse_profile := vn.venue_profile(Nyse(()))
   match conf.validate_new_order_venue(fix_msg, nyse_profile) {
     Ok(_) => {
@@ -168,7 +173,6 @@ fn show_wall_fix() -> [io] Unit {
 }
 
 # ---- Wall 4: SOR venue unavailability ------------------------------
-
 fn show_wall_sor() -> [io] Unit {
   let __s := section(4, "SOR — venue unavailable (DirectTo CBOE, only NYSE/NASDAQ)")
   let available := [Nyse(()), Nasdaq(())]
@@ -186,7 +190,6 @@ fn show_wall_sor() -> [io] Unit {
 }
 
 # ---- Order 5: All walls cleared ------------------------------------
-
 fn show_route(r :: sor_route.Route) -> [io] Unit {
   io.print("    " + vn.venue_to_str(r.venue) + "  " + int.to_str(r.quantity) + " shares")
 }
@@ -203,8 +206,6 @@ fn show_routes(rs :: List[sor_route.Route]) -> [io] Unit {
 
 fn show_accepted(trail :: trail_log.Log) -> [io, sql, time] Unit {
   let __s := section_accepted()
-
-  # Step 1: Pre-trade gate (margin + risk)
   let __hdr1 := io.print("")
   let __hdr2 := io.print("  [1/4] Pre-trade gate")
   let gate := pt.default_margin_gate()
@@ -220,8 +221,6 @@ fn show_accepted(trail :: trail_log.Log) -> [io, sql, time] Unit {
       io.print("  entry_id  " + lar.entry_id)
     },
   }
-
-  # Step 2: Smart order routing
   let __hdr3 := io.print("")
   let __hdr4 := io.print("  [2/4] Smart order routing — Sweep([NYSE, NASDAQ])")
   let available := [Nyse(()), Nasdaq(())]
@@ -233,8 +232,6 @@ fn show_accepted(trail :: trail_log.Log) -> [io, sql, time] Unit {
       show_routes(decision.routes)
     },
   }
-
-  # Step 3: MiFID II RTS 22
   let __hdr5 := io.print("")
   let __hdr6 := io.print("  [3/4] MiFID II RTS 22 — transaction report (RTS 22 fields)")
   let fill := mock_fill(order_good())
@@ -253,8 +250,6 @@ fn show_accepted(trail :: trail_log.Log) -> [io, sql, time] Unit {
       io.print("  " + preview)
     },
   }
-
-  # Step 4: FINRA CAT events
   let __hdr7 := io.print("")
   let __hdr8 := io.print("  [4/4] FINRA CAT — lifecycle events")
   let cat_ctx := { cat_order_id: "CAT-0001", firm_id: "FIRM01", reporter_imid: "FIRM01", symbol: "MSFT", side: "B", order_type: "LMT" }
@@ -270,7 +265,6 @@ fn show_accepted(trail :: trail_log.Log) -> [io, sql, time] Unit {
 }
 
 # ---- main -----------------------------------------------------------
-
 fn main() -> [io, sql, fs_write, time] Unit {
   let __hdr1 := io.print("  lex-finance  ·  Five orders. Four walls. One paper trail.")
   let __hdr2 := io.print("")
@@ -291,3 +285,4 @@ fn main() -> [io, sql, fs_write, time] Unit {
     },
   }
 }
+

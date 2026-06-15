@@ -65,7 +65,6 @@ fn assert_true(cond :: Bool, label :: Str) -> Result[Unit, Str] {
 }
 
 # ---- Fixtures -------------------------------------------------------
-
 fn agent_order() -> order.Order {
   order.order("ORD-LIFE-001", "MSFT", OrderBuy(()), 100, LimitOrder("125.50"), "0", "ACC-MAIN", "TRADER-01", "20260530-10:00:00.000")
 }
@@ -79,7 +78,6 @@ fn mock_fill_report(o :: order.Order) -> er.ExecutionReport {
 }
 
 # ---- Position update step ------------------------------------------
-
 fn apply_fill_step(pos_db :: orm_conn.ConnDb, o :: order.Order, mock_er :: er.ExecutionReport) -> [sql] Result[Unit, Str] {
   let fills := ffe.fill_from_er(mock_er)
   let pos_key := { account: o.account, symbol: o.symbol }
@@ -88,12 +86,11 @@ fn apply_fill_step(pos_db :: orm_conn.ConnDb, o :: order.Order, mock_er :: er.Ex
     Some(fill) => match ps.apply_and_store(pos_db, pos_key, fill) {
       Err(_) => fail("position update failed"),
       Ok(updated) => assert_true(updated.qty == 100, str.concat("expected qty=100 after buy fill, got=", int.to_str(updated.qty))),
-    }
+    },
   }
 }
 
 # ---- Reconstruction + replay step ----------------------------------
-
 fn replay_step(trail_db :: Db, entry_id :: Str) -> [sql] Result[Unit, Str] {
   match rc.reconstruct(trail_db, entry_id) {
     Err(e) => fail(str.concat("reconstruct failed: ", e)),
@@ -114,7 +111,6 @@ fn replay_step(trail_db :: Db, entry_id :: Str) -> [sql] Result[Unit, Str] {
 }
 
 # ---- Full lifecycle -------------------------------------------------
-
 fn full_order_lifecycle_test() -> [sql, fs_write, time] Result[Unit, Str] {
   match trail_log.open_memory() {
     Err(e) => fail(str.concat("trail open failed: ", e)),
@@ -126,24 +122,16 @@ fn full_order_lifecycle_test() -> [sql, fs_write, time] Result[Unit, Str] {
           Err(_) => fail("position store init failed"),
           Ok(_) => {
             let o := agent_order()
-
-            # Step 1: validate + log + record
             let lar := vio.validate_log_and_record(o, risk_limits(), None, { max_deviation_bps: 200 }, "ALGO01", "EXCH01", trail, "validation.validate@0.9.7")
-
-            # Step 2: gate must accept the order
             match lar.result {
               Rejected(_) => fail("order should be accepted by the pre-trade gate"),
               Accepted(_) => {
                 if str.is_empty(lar.entry_id) {
                   fail("entry_id must be non-empty after successful trail append")
                 } else {
-
-                  # Step 3: mock fill → position update
                   match apply_fill_step(pos_conn, o, mock_fill_report(o)) {
                     Err(msg) => Err(msg),
                     Ok(_) => {
-
-                      # Step 4: reconstruct + replay
                       replay_step(trail.db, lar.entry_id)
                     },
                   }
@@ -166,3 +154,4 @@ fn run_all() -> [sql, fs_write, time] Int {
     }
   })
 }
+

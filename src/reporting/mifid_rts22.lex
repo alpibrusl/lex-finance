@@ -53,7 +53,6 @@ import "lex-fix/src/v44/enums" as en
 type Instrument = { isin :: Str, mic :: Str }
 
 # ---- RTS 22 enum types --------------------------------------------------
-
 # RTS 22 Field 29 — Trading capacity of the investment firm.
 type TradingCapacity = Principal(Unit) | Agent(Unit) | RisklessPrincipal(Unit)
 
@@ -104,12 +103,12 @@ type AssetClass = EquityCash(Unit) | EquityDerivative(Unit) | InterestRate(Unit)
 
 fn asset_class_code(a :: AssetClass) -> Str {
   match a {
-    EquityCash(_)       => "ESXXXX",
+    EquityCash(_) => "ESXXXX",
     EquityDerivative(_) => "OCXXXX",
-    InterestRate(_)     => "IRXXXX",
-    ForeignExchange(_)  => "CMXXXX",
-    Commodity(_)        => "CMXXXX",
-    OtherAsset(_)       => "XXXXXX",
+    InterestRate(_) => "IRXXXX",
+    ForeignExchange(_) => "CMXXXX",
+    Commodity(_) => "CMXXXX",
+    OtherAsset(_) => "XXXXXX",
   }
 }
 
@@ -118,11 +117,11 @@ type CounterpartySector = InvestmentFirm(Unit) | CreditInstitution(Unit) | Insur
 
 fn counterparty_sector_code(c :: CounterpartySector) -> Str {
   match c {
-    InvestmentFirm(_)   => "IFRS",
+    InvestmentFirm(_) => "IFRS",
     CreditInstitution(_) => "CRDT",
-    InsuranceFirm(_)    => "INSU",
-    UCITS(_)            => "UCIT",
-    NonFinancial(_)     => "NFIN",
+    InsuranceFirm(_) => "INSU",
+    UCITS(_) => "UCIT",
+    NonFinancial(_) => "NFIN",
   }
 }
 
@@ -131,15 +130,14 @@ type OrderKind = MarketRts(Unit) | LimitRts(Unit) | StopRts(Unit) | StopLimitRts
 
 fn order_kind_code(k :: OrderKind) -> Str {
   match k {
-    MarketRts(_)    => "MKTORD",
-    LimitRts(_)     => "LMTORD",
-    StopRts(_)      => "STPORD",
+    MarketRts(_) => "MKTORD",
+    LimitRts(_) => "LMTORD",
+    StopRts(_) => "STPORD",
     StopLimitRts(_) => "STPLMT",
   }
 }
 
 # ---- Context and report types -------------------------------------------
-
 # Data required by RTS 22 that an ExecutionReport does not carry.
 # Fields trading_capacity, transaction_type, algo_id, waiver_types, and
 # otc_flags were added in the expanded subset; use reporting_ctx for a
@@ -224,7 +222,10 @@ fn from_execution(report :: er.ExecutionReport, instrument :: Instrument, ctx ::
 fn from_execution_full(report :: er.ExecutionReport, instrument :: Instrument, ctx :: ReportingContext) -> Result[Rts22Report, List[Str]] {
   let waiver_codes := list.map(ctx.waiver_types, waiver_code)
   let otc_codes := list.map(ctx.otc_flags, otc_flag_code)
-  let ok_str := match ctx.order_kind { None => None, Some(k) => Some(order_kind_code(k)) }
+  let ok_str := match ctx.order_kind {
+    None => None,
+    Some(k) => Some(order_kind_code(k)),
+  }
   let tr := { transaction_ref_no: ctx.transaction_ref_no, trading_venue: instrument.mic, instrument_isin: instrument.isin, buyer_lei: ctx.buyer_lei, seller_lei: ctx.seller_lei, price: report.last_px, quantity: report.last_qty, trade_date: ctx.trade_date, trade_time: ctx.trade_time, side: side_code(report.side), trading_capacity: trading_capacity_code(ctx.trading_capacity), transaction_type: transaction_type_code(ctx.transaction_type), algo_id: ctx.algo_id, waiver_types: waiver_codes, otc_flags: otc_codes, asset_class: asset_class_code(ctx.asset_class), price_currency: ctx.price_currency, notional_currency: ctx.notional_currency, counterparty_sector: counterparty_sector_code(ctx.counterparty_sector), order_kind: ok_str, decision_maker_lei: ctx.decision_maker_lei, short_selling_flag: ctx.short_selling_flag }
   let missing := missing_rts22_fields(tr)
   if list.is_empty(missing) {
@@ -252,15 +253,24 @@ fn to_json_rts22(r :: Rts22Report) -> Str {
     None => json_field("algo_id", ""),
     Some(id) => json_field("algo_id", id),
   }
-  let ok_field := match r.order_kind { None => json_field("order_kind", ""), Some(k) => json_field("order_kind", k) }
-  let dm_field := match r.decision_maker_lei { None => json_field("decision_maker_lei", ""), Some(lei) => json_field("decision_maker_lei", lei) }
-  let ss_str := if r.short_selling_flag { "true" } else { "false" }
+  let ok_field := match r.order_kind {
+    None => json_field("order_kind", ""),
+    Some(k) => json_field("order_kind", k),
+  }
+  let dm_field := match r.decision_maker_lei {
+    None => json_field("decision_maker_lei", ""),
+    Some(lei) => json_field("decision_maker_lei", lei),
+  }
+  let ss_str := if r.short_selling_flag {
+    "true"
+  } else {
+    "false"
+  }
   let fields := [json_field("transaction_ref_no", r.transaction_ref_no), json_field("trading_venue", r.trading_venue), json_field("instrument_isin", r.instrument_isin), json_field("buyer_lei", r.buyer_lei), json_field("seller_lei", r.seller_lei), json_field("price", r.price), json_field("quantity", r.quantity), json_field("trade_date", r.trade_date), json_field("trade_time", r.trade_time), json_field("side", r.side), json_field("trading_capacity", r.trading_capacity), json_field("transaction_type", r.transaction_type), algo, json_field("asset_class", r.asset_class), json_field("price_currency", r.price_currency), json_field("notional_currency", r.notional_currency), json_field("counterparty_sector", r.counterparty_sector), ok_field, dm_field, json_field("short_selling_flag", ss_str)]
   str.concat("{", str.concat(str.join(fields, ","), "}"))
 }
 
 # ---- ISO 20022 XML serialization --------------------------------
-
 # Wrap content in an XML element: <tag>content</tag>.
 fn xml_tag(tag :: Str, content :: Str) -> Str {
   str.concat("<", str.concat(tag, str.concat(">", str.concat(content, str.concat("</", str.concat(tag, ">"))))))
@@ -283,3 +293,4 @@ fn to_iso20022_xml(report :: Rts22Report) -> Str {
   let body := str.concat(ref_elem, str.concat(ntty_elem, str.concat(buyr_elem, str.concat(sellr_elem, str.concat(trade_dt_elem, str.concat(trade_tm_elem, str.concat(instrm_elem, str.concat(qty_elem, str.concat(pric_elem, str.concat(cpcty_elem, txtp_elem))))))))))
   xml_tag("TxRpt", body)
 }
+

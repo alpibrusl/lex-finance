@@ -46,8 +46,6 @@ type CatPartialFillEvent = { cat_order_id :: Str, firm_id :: Str, reporter_imid 
 
 type CatEvent = NewOrder(CatOrderEvent) | RouteOrder(CatRouteEvent) | Fill(CatFillEvent) | Cancel(CatCancelEvent) | Modify(CatModifyEvent) | Expire(CatExpireEvent) | PartialFill(CatPartialFillEvent)
 
-# `reporter_imid` is the CAT NMS Plan Industry Member ID, required on
-# every submission to identify the reporting firm.
 type OrderContext = { cat_order_id :: Str, firm_id :: Str, reporter_imid :: Str, symbol :: Str, side :: Str, order_type :: Str }
 
 # A minimal order-lifecycle transition, payload records tagged per kind.
@@ -120,3 +118,4 @@ fn to_json_report(e :: CatEvent) -> Str {
     PartialFill(p) => wrap(str.join([jstr("eventType", event_type(e)), jstr("catOrderID", p.cat_order_id), jstr("firmID", p.firm_id), jstr("reporterIMID", p.reporter_imid), jnum("fillQty", p.fill_qty), jstr("fillPrice", p.fill_price), jnum("leavesQty", p.leaves_qty), jnum("timestampNS", p.timestamp_ns)], ",")),
   }
 }
+

@@ -9,6 +9,7 @@
 # Effects: [sql, fs_write, time]
 
 import "std.list" as list
+
 import "std.str" as str
 
 import "lex-money/src/decimal" as d
@@ -16,7 +17,9 @@ import "lex-money/src/decimal" as d
 import "lex-trail/src/log" as trail_log
 
 import "lex-trade/src/order" as order
+
 import "lex-trade/src/limit" as limit
+
 import "lex-trade/src/rejection" as rejection
 
 import "../src/pre_trade" as pt
@@ -30,11 +33,14 @@ fn fail(why :: Str) -> Result[Unit, Str] {
 }
 
 fn assert_true(cond :: Bool, label :: Str) -> Result[Unit, Str] {
-  if cond { pass() } else { fail(label) }
+  if cond {
+    pass()
+  } else {
+    fail(label)
+  }
 }
 
 # ---- Fixtures -------------------------------------------------------
-
 fn lim() -> limit.RiskLimit {
   { max_order_qty: 1000, max_notional_str: "1000000.00", allowed_symbols: [], allowed_sides: ["buy", "sell"] }
 }
@@ -56,7 +62,6 @@ fn tolerance() -> { max_deviation_bps :: Int } {
 }
 
 # ---- Tests ----------------------------------------------------------
-
 # A 600-share order at $500 → notional $300k → IM $75k > $50k cap → breach
 fn test_margin_breach_rejects_before_trail() -> [sql, fs_write, time] Result[Unit, Str] {
   match trail_log.open_memory() {
@@ -119,8 +124,6 @@ fn test_margin_pass_then_qty_rejection() -> [sql, fs_write, time] Result[Unit, S
   match trail_log.open_memory() {
     Err(e) => fail("trail open: " + e),
     Ok(log) => {
-      # mark=$1 → notional = 5000 * $1 = $5000, IM = $1250 → passes margin
-      # but qty=5000 exceeds max_order_qty=1000 → lex-trade rejects
       let gate := pt.margin_gate(price(100, -2))
       let lar := pt.validate_with_margin(oversized_order(), lim(), gate, None, tolerance(), "ALGO01", "EXCH01", log, "")
       match lar.result {
@@ -140,7 +143,6 @@ fn test_margin_pass_then_qty_rejection() -> [sql, fs_write, time] Result[Unit, S
 }
 
 # ---- Suite ----------------------------------------------------------
-
 fn suite() -> [sql, fs_write, time] List[Result[Unit, Str]] {
   [test_margin_breach_rejects_before_trail(), test_margin_pass_proceeds_to_validation(), test_default_gate_skips_margin_check(), test_margin_pass_then_qty_rejection()]
 }
@@ -153,3 +155,4 @@ fn run_all() -> [sql, fs_write, time] Int {
     }
   })
 }
+
