@@ -132,7 +132,7 @@ fn full_order_lifecycle_test() -> [sql, fs_write, time] Result[Unit, Str] {
                   match apply_fill_step(pos_conn, o, mock_fill_report(o)) {
                     Err(msg) => Err(msg),
                     Ok(_) => {
-                      replay_step(trail.db, lar.entry_id)
+                      replay_step(trail.db.handle, lar.entry_id)
                     },
                   }
                 }
