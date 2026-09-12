@@ -1,6 +1,6 @@
 [package]
 name    = "lex-finance"
-version = "0.1.0"
+version = "0.1.1"
 lex     = "0.10.7"
 
 [dependencies]
